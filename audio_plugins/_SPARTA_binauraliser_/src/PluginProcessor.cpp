@@ -89,20 +89,29 @@ void PluginProcessor::setParameter (int index, float newValue)
     else{
         index-=k_NumOfParameters;
         float newValueScaled;
-        if (!(index % 2)){
-            newValueScaled = (newValue - 0.5f)*360.0f;
-            if (newValueScaled != binauraliser_getSourceAzi_deg(hBin, index/2)){
-                binauraliser_setSourceAzi_deg(hBin, index/2, newValueScaled);
-                refreshWindow = true;
+        switch (index % 3) {
+            case 0:
+                newValueScaled = (newValue - 0.5f)*360.0f;
+                // TODO: this changed value check happens twice
+                // (also in binauraliser_setSourceAzi_deg), as with the following checks... I see it's used here to prevent extraneous refreshes, but perhaps setters could return a bool on successful update?
+                // i.e. refreshWindow = binauraliser_setSourceAzi_deg(hBin, index/3, newValueScaled);
+                if (newValueScaled != binauraliser_getSourceAzi_deg(hBin, index/3)){
+                    binauraliser_setSourceAzi_deg(hBin, index/3, newValueScaled);
+                    refreshWindow = true;
+                }
+            case 1:
+                newValueScaled = (newValue - 0.5f)*180.0f;
+                if (newValueScaled != binauraliser_getSourceElev_deg(hBin, index/3)){
+                    binauraliser_setSourceElev_deg(hBin, index/3, newValueScaled);
+                    refreshWindow = true;
+                }
+            case 2:
+                newValueScaled = newValue * (3.0f - 0.15) + 0.15;
+                if (newValueScaled != binauraliser_getSourceDist_m(hBin, index/3)){
+                    binauraliser_setSourceDist_m(hBin, index/3, newValueScaled);
+                    refreshWindow = true;
+                }
             }
-        }
-        else{
-            newValueScaled = (newValue - 0.5f)*180.0f;
-            if (newValueScaled != binauraliser_getSourceElev_deg(hBin, index/2)){
-                binauraliser_setSourceElev_deg(hBin, index/2, newValueScaled);
-                refreshWindow = true;
-            }
-        }
     }
 }
 
@@ -130,16 +139,21 @@ float PluginProcessor::getParameter (int index)
     /* source direction parameters */
     else{
         index-=k_NumOfParameters;
-        if (!(index % 2))
-            return (binauraliser_getSourceAzi_deg(hBin, index/2)/360.0f) + 0.5f;
-        else
-            return (binauraliser_getSourceElev_deg(hBin, (index-1)/2)/180.0f) + 0.5f;
+        switch (index % 3) {
+            case 0:
+                return (binauraliser_getSourceAzi_deg(hBin, index/3) / 360.0f) + 0.5f;
+            case 1:
+                return (binauraliser_getSourceElev_deg(hBin, index/3) / 180.0f) + 0.5f; // TODO: this was (index-1)/2... bug?
+            case 2:
+                return (binauraliser_getSourceDist_m(hBin, index/3) - 0.15) / (3.0f - 0.15);
+            default: return 0.0f;
+            }
     }
 }
 
 int PluginProcessor::getNumParameters()
 {
-	return k_NumOfParameters + 2*MAX_NUM_INPUTS;
+	return k_NumOfParameters + 3*MAX_NUM_INPUTS;
 }
 
 const String PluginProcessor::getName() const
@@ -325,6 +339,7 @@ void PluginProcessor::getStateInformation (MemoryBlock& destData)
     for(int i=0; i<binauraliser_getMaxNumSources(); i++){
         xml.setAttribute("SourceAziDeg" + String(i), binauraliser_getSourceAzi_deg(hBin,i));
         xml.setAttribute("SourceElevDeg" + String(i), binauraliser_getSourceElev_deg(hBin,i));
+        xml.setAttribute("SourceDistMeter" + String(i), binauraliser_getSourceDist_m(hBin,i));
     }
     xml.setAttribute("nSources", binauraliser_getNumSources(hBin));
     
@@ -360,6 +375,8 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
                     binauraliser_setSourceAzi_deg(hBin, i, (float)xmlState->getDoubleAttribute("SourceAziDeg" + String(i), 0.0f));
                 if(xmlState->hasAttribute("SourceElevDeg" + String(i)))
                     binauraliser_setSourceElev_deg(hBin, i, (float)xmlState->getDoubleAttribute("SourceElevDeg" + String(i), 0.0f));
+                if(xmlState->hasAttribute("SourceDistMeter" + String(i)))
+                    binauraliser_setSourceDist_m(hBin, i, (float)xmlState->getDoubleAttribute("SourceDistMeter" + String(i), 3.0f));
             }
             if(xmlState->hasAttribute("nSources"))
                binauraliser_setNumSources(hBin, xmlState->getIntAttribute("nSources", 1)); 
@@ -474,6 +491,8 @@ void PluginProcessor::loadConfiguration (const File& configFile)
             if ( !((*it).getProperty("Imaginary"))){
                 binauraliser_setSourceAzi_deg(hBin, channelIDs[src_idx]-1, (*it).getProperty("Azimuth"));
                 binauraliser_setSourceElev_deg(hBin, channelIDs[src_idx]-1, (*it).getProperty("Elevation"));
+                // TODO: assuming these virtual speaker sources should default to default "plane wave" distance
+                binauraliser_setSourceDist_m(hBin, channelIDs[src_idx]-1, 3.0f);
                 src_idx++;
             }
         }
