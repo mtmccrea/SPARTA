@@ -140,14 +140,11 @@ float PluginProcessor::getParameter (int index)
     else{
         index-=k_NumOfParameters;
         switch (index % 3) {
-            case 0:
-                return (binauraliser_getSourceAzi_deg(hBin, index/3) / 360.0f) + 0.5f;
-            case 1:
-                return (binauraliser_getSourceElev_deg(hBin, index/3) / 180.0f) + 0.5f; // TODO: this was (index-1)/2... bug?
-            case 2:
-                return (binauraliser_getSourceDist_m(hBin, index/3) - 0.15) / (3.0f - 0.15);
+            case 0:  return (binauraliser_getSourceAzi_deg(hBin, index/3) / 360.0f) + 0.5f;
+            case 1:  return (binauraliser_getSourceElev_deg(hBin, index/3) / 180.0f) + 0.5f; // TODO: this was (index-1)/2... bug?
+            case 2:  return (binauraliser_getSourceDist_m(hBin, index/3) - 0.15) / (3.0f - 0.15);
             default: return 0.0f;
-            }
+        }
     }
 }
 
@@ -181,10 +178,12 @@ const String PluginProcessor::getParameterName (int index)
     /* source direction parameters */
     else{
         index-=k_NumOfParameters;
-        if (!(index % 2))
-            return TRANS("Azim_") + String(index/2);
-        else
-            return TRANS("Elev_") + String((index-1)/2);
+        switch (index % 3) {
+           case 0:  return TRANS("Azim_") + String(index/3);
+           case 1:  return TRANS("Elev_") + String(index/3); // TODO: this was (index-1)/2... bug?
+           case 2:  return TRANS("Dist_") + String(index/3);
+           default: return "NULL";
+        }
     }
 }
 
@@ -208,10 +207,12 @@ const String PluginProcessor::getParameterText(int index)
     /* source direction parameters */
     else{
         index-=k_NumOfParameters;
-        if (!(index % 2))
-            return String(binauraliser_getSourceAzi_deg(hBin, index/2));
-        else
-            return String(binauraliser_getSourceElev_deg(hBin, (index-1)/2));
+        switch (index % 3) {
+            case 0:  return String(binauraliser_getSourceAzi_deg(hBin, index/3));
+            case 1:  return String(binauraliser_getSourceElev_deg(hBin, index/3));  // TODO: this was (index-1)/2... bug?
+            case 2:  return String(binauraliser_getSourceDist_m(hBin, index/3));
+            default: return "NULL";
+        }
     }
 }
 
