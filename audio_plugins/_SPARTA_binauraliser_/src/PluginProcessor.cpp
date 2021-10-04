@@ -377,7 +377,7 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
                 if(xmlState->hasAttribute("SourceElevDeg" + String(i)))
                     binauraliser_setSourceElev_deg(hBin, i, (float)xmlState->getDoubleAttribute("SourceElevDeg" + String(i), 0.0f));
                 if(xmlState->hasAttribute("SourceDistMeter" + String(i)))
-                    binauraliser_setSourceDist_m(hBin, i, (float)xmlState->getDoubleAttribute("SourceDistMeter" + String(i), 3.0f));
+                    binauraliser_setSourceDist_m(hBin, i, (float)xmlState->getDoubleAttribute("SourceDistMeter" + String(i), 3.0f)); // TODO: confirm agreement between defaults
             }
             if(xmlState->hasAttribute("nSources"))
                binauraliser_setNumSources(hBin, xmlState->getIntAttribute("nSources", 1)); 

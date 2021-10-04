@@ -57,9 +57,14 @@ inputCoordsView::inputCoordsView (PluginProcessor* ownerFilter, int _maxNCH, int
     hBin = hVst->getFXHandle();
     maxNCH = _maxNCH ;
     currentNCH =_currentNCH;
-    aziSliders =  new std::unique_ptr<Slider>[(unsigned long)maxNCH];
-    elevSliders =  new std::unique_ptr<Slider>[(unsigned long)maxNCH];
-
+    aziSliders = new std::unique_ptr<Slider>[(unsigned long)maxNCH];
+    elevSliders = new std::unique_ptr<Slider>[(unsigned long)maxNCH];
+    distSliders = new std::unique_ptr<Slider>[(unsigned long)maxNCH];
+    
+    int slw = 96, slh = 16; // slider height/width
+    int tbw = 70, tbh = 20; // text box height/width
+    int tbvpad = 8;          // pad between field widgets
+    int leftSide = -25;
     for( int i=0; i<maxNCH; i++){
         /* create and initialise azimuth sliders */
         aziSliders[i].reset (new Slider ("new slider"));
@@ -67,8 +72,8 @@ inputCoordsView::inputCoordsView (PluginProcessor* ownerFilter, int _maxNCH, int
         aziSliders[i]->setRange (-360.0, 360.0, 0.001);
         aziSliders[i]->setValue(binauraliser_getSourceAzi_deg(hBin, i));
         aziSliders[i]->setSliderStyle (Slider::LinearHorizontal);
-        aziSliders[i]->setTextBoxStyle (Slider::TextBoxRight, false, 70, 20);
-        aziSliders[i]->setBounds(-25, 8 + i*sensorEdit_height, 96, 16);
+        aziSliders[i]->setTextBoxStyle (Slider::TextBoxRight, false, tbw, tbh);
+        aziSliders[i]->setBounds(leftSide, tbvpad + i*sensorEdit_height, slw, slh);
         aziSliders[i]->addListener (this);
 
         /* create and initialise elevation sliders */
@@ -77,9 +82,19 @@ inputCoordsView::inputCoordsView (PluginProcessor* ownerFilter, int _maxNCH, int
         elevSliders[i]->setRange (-180.0, 180.0, 0.001);
         elevSliders[i]->setValue(binauraliser_getSourceElev_deg(hBin, i));
         elevSliders[i]->setSliderStyle (Slider::LinearHorizontal);
-        elevSliders[i]->setTextBoxStyle (Slider::TextBoxLeft, false, 70, 20);
-        elevSliders[i]->setBounds(105, 8 + i*sensorEdit_height, 96, 16);
+        elevSliders[i]->setTextBoxStyle (Slider::TextBoxRight, false, tbw, tbh);
+        elevSliders[i]->setBounds(leftSide + slw, tbvpad + i*sensorEdit_height, slw, slh);
         elevSliders[i]->addListener (this);
+        
+        /* create and initialise distance sliders */
+        distSliders[i].reset (new Slider ("new slider"));
+        addAndMakeVisible (distSliders[i].get());
+        distSliders[i]->setRange (0.15, 3.0, 0.001);
+        distSliders[i]->setValue(binauraliser_getSourceDist_m(hBin, i));
+        distSliders[i]->setSliderStyle (Slider::LinearHorizontal);
+        distSliders[i]->setTextBoxStyle (Slider::TextBoxRight, false, tbw, tbh);
+        distSliders[i]->setBounds(leftSide + slw + slw, tbvpad + i*sensorEdit_height, slw, slh);
+        distSliders[i]->addListener (this);
     }
 
     sliderHasChanged = true;
@@ -103,9 +118,11 @@ inputCoordsView::~inputCoordsView()
     for( int i=0; i<maxNCH; i++){
         aziSliders[i] = nullptr;
         elevSliders[i] = nullptr;
+        distSliders[i] = nullptr;
     }
     delete [] aziSliders;
     delete [] elevSliders;
+    delete [] distSliders;
     //[/Destructor]
 }
 
@@ -153,7 +170,8 @@ void inputCoordsView::paint (juce::Graphics& g)
     for( int i=0; i<maxNCH; i++){
         /* draw sensor IDs */
         g.setColour (fillColour);
-        g.drawText (String(i+1), 72, 5+ i*sensorEdit_height, 33, 23,
+        //g.drawText (String(i+1), 72, 5+ i*sensorEdit_height, 33, 23, // TODO: cleanup
+        g.drawText (String(i+1), 2, 5 + i*sensorEdit_height, 33, 23,
                     Justification::centred, true);
 
         /* draw rectangle around sensor parameter */
@@ -191,6 +209,10 @@ void inputCoordsView::sliderValueChanged (juce::Slider* sliderThatWasMoved)
             binauraliser_setSourceElev_deg(hBin, i, (float)elevSliders[i]->getValue());
             break;
         }
+        if (sliderThatWasMoved == distSliders[i].get()) {
+            binauraliser_setSourceDist_m(hBin, i, (float)distSliders[i]->getValue());
+            break;
+        }
     }
 
     //[/UsersliderValueChanged_Pre]
@@ -217,6 +239,8 @@ void inputCoordsView::refreshCoords(){
         aziSliders[i]->setValue(binauraliser_getSourceAzi_deg(hBin, i), dontSendNotification);
         elevSliders[i]->setRange (-180.0, 180.0, 0.001);
         elevSliders[i]->setValue(binauraliser_getSourceElev_deg(hBin, i), dontSendNotification);
+        distSliders[i]->setRange (0.15, 3.0, 0.001);
+        distSliders[i]->setValue(binauraliser_getSourceDist_m(hBin, i), dontSendNotification);
     }
 }
 

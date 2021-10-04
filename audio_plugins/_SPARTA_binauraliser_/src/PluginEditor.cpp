@@ -914,7 +914,8 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 66, y = 122, width = 108, height = 28;
-        juce::String text (juce::CharPointer_UTF8 ("Azi\xc2\xb0   #   Elev\xc2\xb0"));
+        //juce::String text (juce::CharPointer_UTF8 ("Azi\xc2\xb0   #   Elev\xc2\xb0")); // TODO: cleanup
+        juce::String text (juce::CharPointer_UTF8 ("#   Azi\xc2\xb0   Elev\xc2\xb0   Dist\xc2\xb0"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
