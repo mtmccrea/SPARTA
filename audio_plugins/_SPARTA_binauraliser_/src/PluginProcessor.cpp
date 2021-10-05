@@ -99,18 +99,21 @@ void PluginProcessor::setParameter (int index, float newValue)
                     binauraliser_setSourceAzi_deg(hBin, index/3, newValueScaled);
                     refreshWindow = true;
                 }
+                break;
             case 1:
                 newValueScaled = (newValue - 0.5f)*180.0f;
                 if (newValueScaled != binauraliser_getSourceElev_deg(hBin, index/3)){
                     binauraliser_setSourceElev_deg(hBin, index/3, newValueScaled);
                     refreshWindow = true;
                 }
+                break;
             case 2:
                 newValueScaled = newValue * (3.0f - 0.15) + 0.15;
                 if (newValueScaled != binauraliser_getSourceDist_m(hBin, index/3)){
                     binauraliser_setSourceDist_m(hBin, index/3, newValueScaled);
                     refreshWindow = true;
                 }
+                break;
             }
     }
 }
@@ -141,7 +144,7 @@ float PluginProcessor::getParameter (int index)
         index-=k_NumOfParameters;
         switch (index % 3) {
             case 0:  return (binauraliser_getSourceAzi_deg(hBin, index/3) / 360.0f) + 0.5f;
-            case 1:  return (binauraliser_getSourceElev_deg(hBin, index/3) / 180.0f) + 0.5f; // TODO: this was (index-1)/2... bug?
+            case 1:  return (binauraliser_getSourceElev_deg(hBin, index/3) / 180.0f) + 0.5f;
             case 2:  return (binauraliser_getSourceDist_m(hBin, index/3) - 0.15) / (3.0f - 0.15);
             default: return 0.0f;
         }
@@ -180,7 +183,7 @@ const String PluginProcessor::getParameterName (int index)
         index-=k_NumOfParameters;
         switch (index % 3) {
            case 0:  return TRANS("Azim_") + String(index/3);
-           case 1:  return TRANS("Elev_") + String(index/3); // TODO: this was (index-1)/2... bug?
+           case 1:  return TRANS("Elev_") + String(index/3);
            case 2:  return TRANS("Dist_") + String(index/3);
            default: return "NULL";
         }
@@ -209,7 +212,7 @@ const String PluginProcessor::getParameterText(int index)
         index-=k_NumOfParameters;
         switch (index % 3) {
             case 0:  return String(binauraliser_getSourceAzi_deg(hBin, index/3));
-            case 1:  return String(binauraliser_getSourceElev_deg(hBin, index/3));  // TODO: this was (index-1)/2... bug?
+            case 1:  return String(binauraliser_getSourceElev_deg(hBin, index/3));
             case 2:  return String(binauraliser_getSourceDist_m(hBin, index/3));
             default: return "NULL";
         }
@@ -437,8 +440,9 @@ void PluginProcessor::saveConfigurationToFile (File destination)
     {
         sources.appendChild (ConfigurationHelper::
                              createElement(binauraliser_getSourceAzi_deg(hBin, i),
-                                          binauraliser_getSourceElev_deg(hBin, i),
-                                          1.0f, i+1, false, 1.0f), nullptr);
+                                           binauraliser_getSourceElev_deg(hBin, i),
+                                           binauraliser_getSourceDist_m(hBin, i),
+                                           i+1, false, 1.0f), nullptr);
     }
     DynamicObject* jsonObj = new DynamicObject();
     jsonObj->setProperty("Name", var("SPARTA Binauraliser source directions."));
