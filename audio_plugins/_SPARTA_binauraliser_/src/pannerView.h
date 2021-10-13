@@ -78,6 +78,10 @@ private:
     int NLoudspeakers;
     bool sourceIconIsClicked;
     int indexOfClickedSource;
+    float icon_diam;
+    float icon_radius;
+    NormalisableRange<float> distRange;
+    NormalisableRange<float> iconGrowFac;
     //[/UserVariables]
 
     //==============================================================================

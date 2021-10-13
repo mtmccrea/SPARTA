@@ -24,8 +24,6 @@
 
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
-const float icon_diam = 8.0f;
-const float icon_radius = icon_diam/2.0f;
 
 //[/MiscUserDefs]
 
@@ -35,10 +33,8 @@ pannerView::pannerView (PluginProcessor* ownerFilter, int _width, int _height)
     //[Constructor_pre] You can add your own custom stuff here..
     //[/Constructor_pre]
 
-
     //[UserPreSize]
     //[/UserPreSize]
-
 
     //[Constructor] You can add your own custom stuff here..
     hVst = ownerFilter;
@@ -47,23 +43,30 @@ pannerView::pannerView (PluginProcessor* ownerFilter, int _width, int _height)
     height = _height;
     halfWidth = width / 2.0f;
     halfHeight = height / 2.0f;
+    icon_diam = height / 25.0f; // determines size of "farthest" distance
+    icon_radius = icon_diam / 2.0f;
+    // distance range of a source (closest -> farthest)
+    distRange = NormalisableRange<float>(0.15f, 3.0f, 0, 0.5f);
+    // pixel radius corresponding to a 45 degree spread: height/4
+    iconGrowFac = NormalisableRange<float>(1.0f, (height / 4.0f) / (icon_radius * 3.0f));
     
-
     setSize (width, height);
     
     for(int src=0; src<MAX_NUM_INPUTS; src++){
-        SourceIcons[src].setBounds(width - width*(binauraliser_getSourceAzi_deg(hBin, src) + 180.0f)/360.f - icon_radius,
-                                   height - height*(binauraliser_getSourceElev_deg(hBin, src) + 90.0f)/180.0f - icon_radius,
+        SourceIcons[src].setBounds(
+                                   width - width * (binauraliser_getSourceAzi_deg(hBin, src) + 180.0f) / 360.f - icon_radius,
+                                   height - height * (binauraliser_getSourceElev_deg(hBin, src) + 90.0f) / 180.0f - icon_radius,
                                    icon_diam,
-                                   icon_diam);
+                                   icon_diam );
     }
     NSources = binauraliser_getNumSources(hBin);
     NLoudspeakers = binauraliser_getNDirs(hBin)>MAX_NUM_OUT_DIRS? MAX_NUM_OUT_DIRS : binauraliser_getNDirs(hBin);
     for(int ls=0; ls<NLoudspeakers; ls++){
-        LoudspeakerIcons[ls].setBounds(width - width*(binauraliser_getHRIRAzi_deg(hBin, ls) + 180.0f)/360.f - icon_radius,
-                                       height - height*(binauraliser_getHRIRElev_deg(hBin, ls)+90.0f)/180.0f - icon_radius,
+        LoudspeakerIcons[ls].setBounds(
+                                       width - width * (binauraliser_getHRIRAzi_deg(hBin, ls) + 180.0f) / 360.f - icon_radius,
+                                       height - height * (binauraliser_getHRIRElev_deg(hBin, ls)+90.0f) / 180.0f - icon_radius,
                                        icon_diam,
-                                       icon_diam);
+                                       icon_diam );
     }
     showInputs = true;
     showOutputs = true;
@@ -160,27 +163,23 @@ void pannerView::paint (juce::Graphics& g)
     if(showInputs){
         /* Draw Source icons */
         for(int src=0; src<NSources; src++){
-            /* icon */
-            //g.setColour(Colour::fromFloatRGBA(1.0-((float)src/(float)NSources), 0.3f, ((float)src/(float)NSources), 1.0f));
+            float srcDist_norm = 1.0f - distRange.convertTo0to1(binauraliser_getSourceDist_m(hBin, src));
+            float newDim1 = icon_radius * iconGrowFac.convertFrom0to1(srcDist_norm);
+            float newDim2 = newDim1 * 2.0f;
+            float newDim3 = newDim1 * 3.0f;
             g.setColour(Colour::fromFloatRGBA(1.0f, 0.0f, 1.0f, 0.85f));
-            //setColourGradient(g, (float)src/(float)NSources);
-            g.setOpacity(0.2f);
-            g.fillEllipse(SourceIcons[src].expanded(8.0f,8.0f));
-            g.setOpacity(0.4f);
-            g.fillEllipse(SourceIcons[src].expanded(4.0f, 4.0f));
-            g.setOpacity(0.85f);
-            g.fillEllipse(SourceIcons[src]);
+            g.setOpacity(0.3f);
+            g.fillEllipse(SourceIcons[src].withSizeKeepingCentre(newDim1, newDim1));
+            g.fillEllipse(SourceIcons[src].withSizeKeepingCentre(newDim2, newDim2));
+            g.fillEllipse(SourceIcons[src].withSizeKeepingCentre(newDim3, newDim3));
         }
         /* Draw Source Icon ID (always on top) */
         g.setColour(Colours::white);
         g.setOpacity(0.9f);
         for(int src=0; src<NSources; src++){
-            g.drawText(String(src+1), SourceIcons[src].expanded(10.0f, 0.0f), Justification::centred, true); // .translated(icon_diam, -icon_diam)
+            g.drawText(String(src+1), SourceIcons[src].expanded(10.0f, 0.0f), Justification::centred, true);
         }
     }
-
-
-
 
     //[/UserPaint]
 }
