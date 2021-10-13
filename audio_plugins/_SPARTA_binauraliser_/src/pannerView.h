@@ -68,6 +68,8 @@ private:
     void* hBin;
     int width;
     int height;
+    float halfWidth;
+    float halfHeight;
     bool showInputs;
     bool showOutputs;
     Rectangle<float> SourceIcons[MAX_NUM_INPUTS];

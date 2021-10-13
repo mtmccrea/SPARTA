@@ -24,8 +24,8 @@
 
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
-const float icon_size = 8.0f;
-
+const float icon_diam = 8.0f;
+const float icon_radius = icon_diam/2.0f;
 
 //[/MiscUserDefs]
 
@@ -39,28 +39,31 @@ pannerView::pannerView (PluginProcessor* ownerFilter, int _width, int _height)
     //[UserPreSize]
     //[/UserPreSize]
 
-    setSize (492, 246);
-
 
     //[Constructor] You can add your own custom stuff here..
     hVst = ownerFilter;
     hBin = hVst->getFXHandle();
     width = _width;
     height = _height;
+    halfWidth = width / 2.0f;
+    halfHeight = height / 2.0f;
+    
 
+    setSize (width, height);
+    
     for(int src=0; src<MAX_NUM_INPUTS; src++){
-        SourceIcons[src].setBounds(width - width*(binauraliser_getSourceAzi_deg(hBin, src) + 180.0f)/360.f - icon_size/2.0f,
-                                   height - height*(binauraliser_getSourceElev_deg(hBin, src) + 90.0f)/180.0f - icon_size/2.0f,
-                                   icon_size,
-                                   icon_size);
+        SourceIcons[src].setBounds(width - width*(binauraliser_getSourceAzi_deg(hBin, src) + 180.0f)/360.f - icon_radius,
+                                   height - height*(binauraliser_getSourceElev_deg(hBin, src) + 90.0f)/180.0f - icon_radius,
+                                   icon_diam,
+                                   icon_diam);
     }
     NSources = binauraliser_getNumSources(hBin);
     NLoudspeakers = binauraliser_getNDirs(hBin)>MAX_NUM_OUT_DIRS? MAX_NUM_OUT_DIRS : binauraliser_getNDirs(hBin);
     for(int ls=0; ls<NLoudspeakers; ls++){
-        LoudspeakerIcons[ls].setBounds(width - width*(binauraliser_getHRIRAzi_deg(hBin, ls) + 180.0f)/360.f - icon_size/2.0f,
-                                       height - height*(binauraliser_getHRIRElev_deg(hBin, ls)+90.0f)/180.0f - icon_size/2.0f,
-                                       icon_size,
-                                       icon_size);
+        LoudspeakerIcons[ls].setBounds(width - width*(binauraliser_getHRIRAzi_deg(hBin, ls) + 180.0f)/360.f - icon_radius,
+                                       height - height*(binauraliser_getHRIRElev_deg(hBin, ls)+90.0f)/180.0f - icon_radius,
+                                       icon_diam,
+                                       icon_diam);
     }
     showInputs = true;
     showOutputs = true;
@@ -86,7 +89,7 @@ void pannerView::paint (juce::Graphics& g)
     //[/UserPrePaint]
 
     {
-        int x = 0, y = 0, width = 492, height = 246;
+        int x = 0, y = 0;
         juce::Colour fillColour1 = juce::Colour (0xff4e4e4e), fillColour2 = juce::Colour (0xff202020);
         juce::Colour strokeColour = juce::Colour (0xff9e9e9e);
         //[UserPaintCustomArguments] Customize the painting arguments here..
@@ -113,8 +116,8 @@ void pannerView::paint (juce::Graphics& g)
     g.setColour(Colours::white);
     g.setOpacity(0.75f);
 
-    g.drawLine(0.0f, height / 2.0f, width, height / 2.0f, 1.0f);
-    g.drawLine(width / 2.0f, 0, width / 2.0f, height, 1.0f);
+    g.drawLine(0.0f, halfHeight, width, halfHeight, 1.0f);
+    g.drawLine(halfWidth, 0, halfWidth, height, 1.0f);
 
     for (int i = 0; i <= numGridLinesX; i++) {
         g.setOpacity(0.1f);
@@ -136,11 +139,11 @@ void pannerView::paint (juce::Graphics& g)
         g.setOpacity(0.75f);
         if (i <= numGridLinesY / 2) {
             g.drawText(String((int)(180 / 2 - i * (int)180 / numGridLinesY)) + "\xc2\xb0",
-                       width / 2.0f, (float)i*height / (float)numGridLinesY, 40, 20, Justification::centred, true);
+                       halfWidth, (float)i*height / (float)numGridLinesY, 40, 20, Justification::centred, true);
         }
         else {
             g.drawText(String((int)(180 / 2 - i * (int)180 / numGridLinesY)) + "\xc2\xb0",
-                       width / 2.0f, (float)i*height / (float)numGridLinesY - 20, 40, 20, Justification::centred, true);
+                       halfWidth, (float)i*height / (float)numGridLinesY - 20, 40, 20, Justification::centred, true);
         }
     }
 
@@ -167,10 +170,12 @@ void pannerView::paint (juce::Graphics& g)
             g.fillEllipse(SourceIcons[src].expanded(4.0f, 4.0f));
             g.setOpacity(0.85f);
             g.fillEllipse(SourceIcons[src]);
-            /* icon ID */
-            g.setColour(Colours::white);
-            g.setOpacity(0.9f);
-            g.drawText(String(src+1), SourceIcons[src].expanded(10.0f, 0.0f), Justification::centred, true); // .translated(icon_size, -icon_size)
+        }
+        /* Draw Source Icon ID (always on top) */
+        g.setColour(Colours::white);
+        g.setOpacity(0.9f);
+        for(int src=0; src<NSources; src++){
+            g.drawText(String(src+1), SourceIcons[src].expanded(10.0f, 0.0f), Justification::centred, true); // .translated(icon_diam, -icon_diam)
         }
     }
 
@@ -212,11 +217,11 @@ void pannerView::mouseDrag (const juce::MouseEvent& e)
     //[UserCode_mouseDrag] -- Add your code here...
     if(sourceIconIsClicked){
         Point<float> point;
-        point.setXY((float)e.getPosition().getX()-icon_size/2.0f, (float)e.getPosition().getY()-icon_size/2.0f);
+        point.setXY((float)e.getPosition().getX()-icon_radius, (float)e.getPosition().getY()-icon_radius);
         binauraliser_setSourceAzi_deg(hBin, indexOfClickedSource,
-                                   ((width - (point.getX() + icon_size/2.0f))*360.0f)/width-180.0f);
+                                   ((width - (point.getX() + icon_radius))*360.0f)/width-180.0f);
         binauraliser_setSourceElev_deg(hBin, indexOfClickedSource,
-                                   ((height - (point.getY() + icon_size/2.0f))*180.0f)/height - 90.0f);
+                                   ((height - (point.getY() + icon_radius))*180.0f)/height - 90.0f);
     }
 
     //[/UserCode_mouseDrag]
@@ -235,18 +240,18 @@ void pannerView::mouseUp (const juce::MouseEvent& e)
 void pannerView::refreshPanView()
 {
     for(int src=0; src<MAX_NUM_INPUTS; src++){
-        SourceIcons[src].setBounds(width - width*(binauraliser_getSourceAzi_deg(hBin, src) + 180.0f)/360.f - icon_size/2.0f,
-                                   height - height*(binauraliser_getSourceElev_deg(hBin, src) + 90.0f)/180.0f - icon_size/2.0f,
-                                   icon_size,
-                                   icon_size);
+        SourceIcons[src].setBounds(width - width*(binauraliser_getSourceAzi_deg(hBin, src) + 180.0f)/360.f - icon_radius,
+                                   height - height*(binauraliser_getSourceElev_deg(hBin, src) + 90.0f)/180.0f - icon_radius,
+                                   icon_diam,
+                                   icon_diam);
     }
     NSources = binauraliser_getNumSources(hBin);
     NLoudspeakers = binauraliser_getNDirs(hBin)>MAX_NUM_OUT_DIRS ? MAX_NUM_OUT_DIRS : binauraliser_getNDirs(hBin);
     for(int ls=0; ls<NLoudspeakers; ls++){
-        LoudspeakerIcons[ls].setBounds(width - width*(binauraliser_getHRIRAzi_deg(hBin, ls) + 180.0f)/360.f - icon_size/2.0f,
-                                       height - height*(binauraliser_getHRIRElev_deg(hBin, ls) + 90.0f)/180.0f - icon_size/2.0f,
-                                       icon_size,
-                                       icon_size);
+        LoudspeakerIcons[ls].setBounds(width - width*(binauraliser_getHRIRAzi_deg(hBin, ls) + 180.0f)/360.f - icon_radius,
+                                       height - height*(binauraliser_getHRIRElev_deg(hBin, ls) + 90.0f)/180.0f - icon_radius,
+                                       icon_diam,
+                                       icon_diam);
     }
 
     repaint();
