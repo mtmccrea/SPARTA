@@ -448,12 +448,12 @@ void PluginProcessor::saveConfigurationToFile (File destination)
                                            i+1, false, 1.0f), nullptr);
     }
     DynamicObject* jsonObj = new DynamicObject();
-    jsonObj->setProperty("Name", var("SPARTA Binauraliser source directions."));
+    jsonObj->setProperty("Name", var("SPARTA Binauraliser source directions and distances."));
     char versionString[10];
     strcpy(versionString, "v");
     strcat(versionString, JucePlugin_VersionString);
     jsonObj->setProperty("Description", var("This configuration file was created with the SPARTA Binauraliser " + String(versionString) + " plug-in. " + Time::getCurrentTime().toString(true, true)));
-    jsonObj->setProperty ("GenericLayout", ConfigurationHelper::convertElementsToVar (sources, "Source Directions"));
+    jsonObj->setProperty ("GenericLayout", ConfigurationHelper::convertElementsToVar (sources, "Source Directions and Distances"));
     //jsonObj->setProperty ("LoudspeakerLayout", ConfigurationHelper::convertLoudspeakersToVar (sources, "Source Directions"));
     Result result = ConfigurationHelper::writeConfigurationToFile (destination, var (jsonObj));
 }
