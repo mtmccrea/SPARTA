@@ -43,10 +43,11 @@ pannerView::pannerView (PluginProcessor* ownerFilter, int _width, int _height)
     height = _height;
     halfWidth = width / 2.0f;
     halfHeight = height / 2.0f;
-    icon_diam = height / 25.0f; // determines size of "farthest" distance
+    icon_diam = height / 25.0f; // size of "farthest" distance
     icon_radius = icon_diam / 2.0f;
+    ffThresh = binauraliser_getFarfieldThresh_m(hBin);
     // distance range of a source (closest -> farthest)
-    distRange = NormalisableRange<float>(0.15f, 3.0f, 0, 0.5f);
+    distRange = NormalisableRange<float>(binauraliser_getNearfieldLimit_m(hBin), hVst->upperDistRange, 0, 0.5f);
     // pixel radius corresponding to a 45 degree spread: height/4
     iconGrowFac = NormalisableRange<float>(1.0f, (height / 4.0f) / (icon_radius * 3.0f));
     
@@ -159,11 +160,12 @@ void pannerView::paint (juce::Graphics& g)
             g.fillRect(LoudspeakerIcons[ls]);
         }
     }
-
+    
     if(showInputs){
         /* Draw Source icons */
         for(int src=0; src<NSources; src++){
-            float srcDist_norm = 1.0f - distRange.convertTo0to1(binauraliser_getSourceDist_m(hBin, src));
+            float curDist = binauraliser_getSourceDist_m(hBin, src);
+            float srcDist_norm = 1.0f - distRange.convertTo0to1(curDist);
             float newDim1 = icon_radius * iconGrowFac.convertFrom0to1(srcDist_norm);
             float newDim2 = newDim1 * 2.0f;
             float newDim3 = newDim1 * 3.0f;
@@ -171,6 +173,9 @@ void pannerView::paint (juce::Graphics& g)
             g.setOpacity(0.3f);
             g.fillEllipse(SourceIcons[src].withSizeKeepingCentre(newDim1, newDim1));
             g.fillEllipse(SourceIcons[src].withSizeKeepingCentre(newDim2, newDim2));
+            if (curDist < ffThresh) {
+                g.setColour(Colour::fromFloatRGBA(255.f/255.f, 183.f/255.f, 3.f/255.f, 0.3f));
+            }
             g.fillEllipse(SourceIcons[src].withSizeKeepingCentre(newDim3, newDim3));
         }
         /* Draw Source Icon ID (always on top) */
@@ -232,8 +237,6 @@ void pannerView::mouseUp (const juce::MouseEvent& e)
     sourceIconIsClicked = false;
     //[/UserCode_mouseUp]
 }
-
-
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 void pannerView::refreshPanView()

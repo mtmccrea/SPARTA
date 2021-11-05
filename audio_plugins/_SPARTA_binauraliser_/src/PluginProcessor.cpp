@@ -37,6 +37,10 @@ PluginProcessor::PluginProcessor() :
     osc.addListener(this);
     refreshWindow = true;
     startTimer(TIMER_PROCESSING_RELATED, 80);
+    /* Far field distance threshold plus head room to firmly clear it with UI sliders. */
+    ffHeadroom = binauraliser_getFarfieldHeadroom(hBin);
+    ffThresh = binauraliser_getFarfieldThresh_m(hBin);
+    upperDistRange = ffThresh * ffHeadroom;
 }
 
 PluginProcessor::~PluginProcessor()
@@ -362,7 +366,6 @@ void PluginProcessor::getStateInformation (MemoryBlock& destData)
     xml.setAttribute("FLIP_ROLL", binauraliser_getFlipRoll(hBin));
     xml.setAttribute("RPY_FLAG", binauraliser_getRPYflag(hBin));
     xml.setAttribute("preProcHRIRs", binauraliser_getEnableHRIRsPreProc(hBin));
-    
     xml.setAttribute("OSC_PORT", osc_port_ID);
     
     copyXmlToBinary(xml, destData);
@@ -371,7 +374,7 @@ void PluginProcessor::getStateInformation (MemoryBlock& destData)
 void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
-
+    
     if (xmlState != nullptr) {
         if (xmlState->hasTagName("BINAURALISERPLUGINSETTINGS")) {
             for(int i=0; i<binauraliser_getMaxNumSources(); i++){
@@ -380,7 +383,7 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
                 if(xmlState->hasAttribute("SourceElevDeg" + String(i)))
                     binauraliser_setSourceElev_deg(hBin, i, (float)xmlState->getDoubleAttribute("SourceElevDeg" + String(i), 0.0f));
                 if(xmlState->hasAttribute("SourceDistMeter" + String(i)))
-                    binauraliser_setSourceDist_m(hBin, i, (float)xmlState->getDoubleAttribute("SourceDistMeter" + String(i), 3.0f)); // TODO: confirm agreement between defaults
+                    binauraliser_setSourceDist_m(hBin, i, (float)xmlState->getDoubleAttribute("SourceDistMeter" + String(i), upperDistRange)); // default source distance is far field (no near field filtering)
             }
             if(xmlState->hasAttribute("nSources"))
                binauraliser_setNumSources(hBin, xmlState->getIntAttribute("nSources", 1)); 
@@ -496,8 +499,7 @@ void PluginProcessor::loadConfiguration (const File& configFile)
             if ( !((*it).getProperty("Imaginary"))){
                 binauraliser_setSourceAzi_deg(hBin, channelIDs[src_idx]-1, (*it).getProperty("Azimuth"));
                 binauraliser_setSourceElev_deg(hBin, channelIDs[src_idx]-1, (*it).getProperty("Elevation"));
-                // TODO: assuming these virtual speaker sources should default to default "plane wave" distance
-                binauraliser_setSourceDist_m(hBin, channelIDs[src_idx]-1, 3.0f);
+                binauraliser_setSourceDist_m(hBin, channelIDs[src_idx]-1, (*it).getProperty("Distance"));
                 src_idx++;
             }
         }

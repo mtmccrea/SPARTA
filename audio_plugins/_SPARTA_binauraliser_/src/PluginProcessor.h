@@ -98,6 +98,10 @@ public:
     }
     int getOscPortID(){ return osc_port_ID; }
     bool getOscPortConnected(){ return osc_connected; }
+    float ffHeadroom;     /* headroom above the far field threshold to easily disable with the UI */
+    float ffThresh;       /* far field distance threshold where near field filters disengage */
+    float upperDistRange; /* ffThresh * ffHeadroom */
+
     
 private:
     void* hBin;           /* binauraliser handle */

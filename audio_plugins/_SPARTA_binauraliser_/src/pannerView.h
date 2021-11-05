@@ -59,6 +59,7 @@ public:
     void mouseDown (const juce::MouseEvent& e) override;
     void mouseDrag (const juce::MouseEvent& e) override;
     void mouseUp (const juce::MouseEvent& e) override;
+//    void mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel) override;
 
 
 
@@ -82,6 +83,8 @@ private:
     float icon_radius;
     NormalisableRange<float> distRange;
     NormalisableRange<float> iconGrowFac;
+    float ffThresh;
+    float upperDistCutoff;
     //[/UserVariables]
 
     //==============================================================================

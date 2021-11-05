@@ -86,10 +86,9 @@ inputCoordsView::inputCoordsView (PluginProcessor* ownerFilter, int _maxNCH, int
         elevSliders[i]->addListener (this);
         
         /* create and initialise distance sliders */
-        // TODO: Slider::setSkewFactor
         distSliders[i].reset (new Slider ("new slider"));
         addAndMakeVisible (distSliders[i].get());
-        distSliders[i]->setRange (0.15, 3.0, 0.001);
+        distSliders[i]->setRange (binauraliser_getNearfieldLimit_m(hBin), hVst->upperDistRange, 0.001);
         distSliders[i]->setNumDecimalPlacesToDisplay (2);
         distSliders[i]->setSkewFactor (0.5, false);
         distSliders[i]->setValue(binauraliser_getSourceDist_m(hBin, i));
@@ -176,11 +175,7 @@ void inputCoordsView::paint (juce::Graphics& g)
         g.setColour (fillColour);
         g.drawText (String(i+1), -6, 4 + i*sensorEdit_height, 33, 23,
                     Justification::centred, true);
-
         /* draw rectangle around sensor parameter */
-        //Colour strokeColour = Colour (0x2370702b);
-        //g.setColour (strokeColour);
-        g.setColour(Colours::white);
         g.setOpacity(0.15f);
         g.drawRect (0, i*sensorEdit_height, sensorEdit_width, sensorEdit_height+1, 1);
     }
@@ -240,10 +235,12 @@ void inputCoordsView::refreshCoords(){
     for( int i=0; i<maxNCH; i++){
         aziSliders[i]->setRange (-360.0, 360.0, 0.1); // TODO: this range doens't conform to binauraliser_setSourceAzi_deg, so UI bugs out beyond +/-180 when dragging (but value OK on mouseup)
         aziSliders[i]->setValue(binauraliser_getSourceAzi_deg(hBin, i), dontSendNotification);
+        
         elevSliders[i]->setRange (-180.0, 180.0, 0.1);
-        elevSliders[i]->setValue(binauraliser_getSourceElev_deg(hBin, i), dontSendNotification);
-        distSliders[i]->setRange (0.15, 3.0, 0.01);
-        distSliders[i]->setValue(binauraliser_getSourceDist_m(hBin, i), dontSendNotification);
+        elevSliders[i]->setValue (binauraliser_getSourceElev_deg(hBin, i), dontSendNotification);
+        
+        distSliders[i]->setRange (binauraliser_getNearfieldLimit_m(hBin), hVst->upperDistRange, 0.01);
+        distSliders[i]->setValue (binauraliser_getSourceDist_m(hBin, i), dontSendNotification);
     }
 }
 
