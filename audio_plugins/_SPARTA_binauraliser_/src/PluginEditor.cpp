@@ -392,7 +392,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     pluginDescription->setBounds (0, 0, 200, 32);
     pluginDescription->setAlpha(0.0f);
     pluginDescription->setEnabled(false);
-    pluginDescription->setTooltip(TRANS("A simple HRIR interpolator and convolver. Currently, the only interpolation option is \"Triangular\", which also relies on phase-simplification of the HRIRs. This simplification involves estimating the ITDs for all the HRIRs, removing the phase from the HRTFs, but then re-introducing the phase as IPDs per frequency-bin. This greatly simplifies the HRIR interpolation process and reduces the computational complexity considerably, but it should be known to the user that this is not the same as direct convolution; although, it should be perceptually very close to direct convolution in the majority of cases. However, this also means that binaural room impuslse responses (BRIRs) are not supported by the plug-in!\n"));
+    pluginDescription->setTooltip(TRANS("A simple HRIR interpolator and convolver with optional near field distance filtering to simulate sources at close range. Currently, the only interpolation option is \"Triangular\", which also relies on phase-simplification of the HRIRs. This simplification involves estimating the ITDs for all the HRIRs, removing the phase from the HRTFs, but then re-introducing the phase as IPDs per frequency-bin. This greatly simplifies the HRIR interpolation process and reduces the computational complexity considerably, but it should be known to the user that this is not the same as direct convolution; although, it should be perceptually very close to direct convolution in the majority of cases. However, this also means that binaural room impuslse responses (BRIRs) are not supported by the plug-in!\n"));
 
 	/* Specify screen refresh rate */
     startTimer(TIMER_GUI_RELATED, 40);
@@ -890,7 +890,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 16, y = 1, width = 100, height = 32;
-        juce::String text (TRANS("SPARTA|"));
+        juce::String text (TRANS("SPARTA |"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -901,8 +901,8 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 92, y = 1, width = 112, height = 32;
-        juce::String text (TRANS("Binauraliser"));
+        int x = 92, y = 1, width = 150, height = 32;
+        juce::String text (TRANS(" BinauraliserDVF"));
         juce::Colour fillColour = juce::Colour (0xffff73f9);
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -981,7 +981,7 @@ void PluginEditor::paint (juce::Graphics& g)
 	g.setColour(Colours::white);
 	g.setFont(Font(11.00f, Font::plain));
 	g.drawText(TRANS("Ver ") + JucePlugin_VersionString + BUILD_VER_SUFFIX + TRANS(", Build Date ") + __DATE__ + TRANS(" "),
-		200, 16, 530, 11,
+		235, 16, 530, 11,
 		Justification::centredLeft, true);
 
     /* display warning message */

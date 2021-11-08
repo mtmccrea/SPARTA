@@ -61,6 +61,7 @@ inputCoordsView::inputCoordsView (PluginProcessor* ownerFilter, int _maxNCH, int
     for( int i=0; i<maxNCH; i++){
         /* create and initialise azimuth sliders */
         aziSliders[i].reset (new Slider ("new slider"));
+        aziSliders[i]->setTooltip("Source azimuth: 0 degrees is forward, 90 degrees is left, -90 degrees right.");
         addAndMakeVisible (aziSliders[i].get());
         aziSliders[i]->setRange (-360.0, 360.0, 0.1); // overwritten by refreshCoords() below
         aziSliders[i]->setValue(binauraliser_getSourceAzi_deg(hBin, i));
@@ -74,6 +75,7 @@ inputCoordsView::inputCoordsView (PluginProcessor* ownerFilter, int _maxNCH, int
 
         /* create and initialise elevation sliders */
         elevSliders[i].reset (new Slider ("new slider"));
+        elevSliders[i]->setTooltip("Source elevation: 90 degrees is above, -90 degree is below.");
         addAndMakeVisible (elevSliders[i].get());
         elevSliders[i]->setRange (-180.0, 180.0, 0.1);
         elevSliders[i]->setNumDecimalPlacesToDisplay (1);
@@ -87,6 +89,7 @@ inputCoordsView::inputCoordsView (PluginProcessor* ownerFilter, int _maxNCH, int
         
         /* create and initialise distance sliders */
         distSliders[i].reset (new Slider ("new slider"));
+        distSliders[i]->setTooltip("Distance from the center of the head (m). Filters disengage when maximally far (approx > 3 m).");
         addAndMakeVisible (distSliders[i].get());
         distSliders[i]->setRange (binauraliser_getNearfieldLimit_m(hBin), hVst->upperDistRange, 0.001);
         distSliders[i]->setNumDecimalPlacesToDisplay (2);
