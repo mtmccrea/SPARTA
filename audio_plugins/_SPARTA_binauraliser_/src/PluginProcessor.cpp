@@ -38,8 +38,9 @@ PluginProcessor::PluginProcessor() :
     refreshWindow = true;
     startTimer(TIMER_PROCESSING_RELATED, 80);
     /* Far field distance threshold plus head room to firmly clear it with UI sliders. */
-    ffHeadroom = binauraliser_getFarfieldHeadroom(hBin);
+    nfThresh = binauraliser_getNearfieldLimit_m(hBin);
     ffThresh = binauraliser_getFarfieldThresh_m(hBin);
+    ffHeadroom = binauraliser_getFarfieldHeadroom(hBin);
     upperDistRange = ffThresh * ffHeadroom;
 }
 
@@ -112,7 +113,9 @@ void PluginProcessor::setParameter (int index, float newValue)
                 }
                 break;
             case 2:
-                newValueScaled = newValue * (3.0f - 0.15) + 0.15;
+                // TODO: replace harcoded vals with pData->farfield_thresh_m, pData->nearfield_limit_m
+                newValueScaled = newValue * (ffThresh - nfThresh) + nfThresh;
+//                newValueScaled = newValue * (3.0f - 0.15) + 0.15;
                 if (newValueScaled != binauraliser_getSourceDist_m(hBin, index/3)){
                     binauraliser_setSourceDist_m(hBin, index/3, newValueScaled);
                     refreshWindow = true;
@@ -149,7 +152,7 @@ float PluginProcessor::getParameter (int index)
         switch (index % 3) {
             case 0:  return (binauraliser_getSourceAzi_deg(hBin, index/3) / 360.0f) + 0.5f;
             case 1:  return (binauraliser_getSourceElev_deg(hBin, index/3) / 180.0f) + 0.5f;
-            case 2:  return (binauraliser_getSourceDist_m(hBin, index/3) - 0.15) / (3.0f - 0.15);
+            case 2:  return (binauraliser_getSourceDist_m(hBin, index/3) - nfThresh) / (ffThresh - nfThresh);
             default: return 0.0f;
         }
     }
