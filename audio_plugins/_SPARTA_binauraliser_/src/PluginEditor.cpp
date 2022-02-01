@@ -902,7 +902,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 92, y = 1, width = 150, height = 32;
-        juce::String text (TRANS(" BinauraliserDVF"));
+        juce::String text (TRANS(" Binauraliser-NF"));
         juce::Colour fillColour = juce::Colour (0xffff73f9);
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
