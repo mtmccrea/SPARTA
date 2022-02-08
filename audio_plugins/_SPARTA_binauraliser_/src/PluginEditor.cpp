@@ -889,27 +889,26 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 16, y = 1, width = 100, height = 32;
+        int x = 16, y = 1, width = 76, height = 32;
         juce::String text (TRANS("SPARTA |"));
-        juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
-        g.setColour (fillColour);
-        g.setFont (juce::Font (18.80f, juce::Font::plain).withTypefaceStyle ("Bold"));
+        juce::Font font (18.00f, juce::Font::plain);
+        g.setFont (font.withTypefaceStyle ("Bold"));
+        g.setColour (juce::Colours::white);
         g.drawText (text, x, y, width, height,
-                    juce::Justification::centredLeft, true);
-    }
-
-    {
-        int x = 92, y = 1, width = 150, height = 32;
-        juce::String text (TRANS(" Binauraliser-NF"));
-        juce::Colour fillColour = juce::Colour (0xffff73f9);
-        //[UserPaintCustomArguments] Customize the painting arguments here..
-        //[/UserPaintCustomArguments]
-        g.setColour (fillColour);
-        g.setFont (juce::Font (18.00f, juce::Font::plain).withTypefaceStyle ("Bold"));
+                    juce::Justification::right, true);
+        x += 16+60; width = 100;
+        text = (TRANS(" Binauraliser"));
+        g.setColour (juce::Colour (0xffff73f9));
         g.drawText (text, x, y, width, height,
-                    juce::Justification::centredLeft, true);
+                    juce::Justification::right, true);
+        x += (width+2);
+        text = (TRANS("NF"));
+        g.setFont (font.withTypefaceStyle ("Bold Italic"));
+        g.setColour (juce::Colour::fromFloatRGBA(255.f/255.f, 183.f/255.f, 3.f/255.f, 1.f));
+        g.drawText (text, x, y, width, height,
+                    juce::Justification::left, true);
     }
 
     {
@@ -1538,4 +1537,3 @@ END_JUCER_METADATA
 
 //[EndFile] You can add extra defines here...
 //[/EndFile]
-
