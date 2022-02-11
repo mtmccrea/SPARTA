@@ -21,6 +21,7 @@
 //[/Headers]
 
 #include "pannerView.h"
+#include "binauraliser_nf.h"
 
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...

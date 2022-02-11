@@ -23,7 +23,7 @@
 #define PLUGINPROCESSOR_H_INCLUDED
 
 #include <JuceHeader.h>
-#include "binauraliser_nf.h"
+#include <binauraliser_nf.h>
 #include <thread>
 #define CONFIGURATIONHELPER_ENABLE_GENERICLAYOUT_METHODS 1
 #include "../../resources/ConfigurationHelper.h"

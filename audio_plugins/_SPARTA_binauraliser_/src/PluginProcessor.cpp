@@ -21,7 +21,8 @@
 */
 
 #include "PluginProcessor.h"
-#include "PluginEditor.h" 
+#include "PluginEditor.h"
+#include "binauraliser_nf.h"
 
 PluginProcessor::PluginProcessor() : 
 	AudioProcessor(BusesProperties()
@@ -38,9 +39,9 @@ PluginProcessor::PluginProcessor() :
     refreshWindow = true;
     startTimer(TIMER_PROCESSING_RELATED, 80);
     /* Far field distance threshold plus head room to firmly clear it with UI sliders. */
-    nfThresh = binauraliser_getNearfieldLimit_m(hBin);
-    ffThresh = binauraliser_getFarfieldThresh_m(hBin);
-    ffHeadroom = binauraliser_getFarfieldHeadroom(hBin);
+    nfThresh = binauraliserNF_getNearfieldLimit_m(hBin);
+    ffThresh = binauraliserNF_getFarfieldThresh_m(hBin);
+    ffHeadroom = binauraliserNF_getFarfieldHeadroom(hBin);
     upperDistRange = ffThresh * ffHeadroom;
 }
 
@@ -116,7 +117,7 @@ void PluginProcessor::setParameter (int index, float newValue)
                 // TODO: replace harcoded vals with pData->farfield_thresh_m, pData->nearfield_limit_m
                 newValueScaled = newValue * (ffThresh - nfThresh) + nfThresh;
 //                newValueScaled = newValue * (3.0f - 0.15) + 0.15;
-                if (newValueScaled != binauraliser_getSourceDist_m(hBin, index/3)){
+                if (newValueScaled != binauraliserNF_getSourceDist_m(hBin, index/3)){
                     binauraliser_setSourceDist_m(hBin, index/3, newValueScaled);
                     refreshWindow = true;
                 }
@@ -386,7 +387,7 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
                 if(xmlState->hasAttribute("SourceElevDeg" + String(i)))
                     binauraliser_setSourceElev_deg(hBin, i, (float)xmlState->getDoubleAttribute("SourceElevDeg" + String(i), 0.0f));
                 if(xmlState->hasAttribute("SourceDistMeter" + String(i)))
-                    binauraliser_setSourceDist_m(hBin, i, (float)xmlState->getDoubleAttribute("SourceDistMeter" + String(i), upperDistRange)); // default source distance is far field (no near field filtering)
+                    binauraliserNF_setSourceDist_m(hBin, i, (float)xmlState->getDoubleAttribute("SourceDistMeter" + String(i), upperDistRange)); // default source distance is far field (no near field filtering)
             }
             if(xmlState->hasAttribute("nSources"))
                binauraliser_setNumSources(hBin, xmlState->getIntAttribute("nSources", 1)); 
@@ -447,7 +448,7 @@ void PluginProcessor::saveConfigurationToFile (File destination)
         sources.appendChild (ConfigurationHelper::
                              createElement(binauraliser_getSourceAzi_deg(hBin, i),
                                            binauraliser_getSourceElev_deg(hBin, i),
-                                           binauraliser_getSourceDist_m(hBin, i),
+                                           binauraliserNF_getSourceDist_m(hBin, i),
                                            i+1, false, 1.0f), nullptr);
     }
     DynamicObject* jsonObj = new DynamicObject();
@@ -502,7 +503,7 @@ void PluginProcessor::loadConfiguration (const File& configFile)
             if ( !((*it).getProperty("Imaginary"))){
                 binauraliser_setSourceAzi_deg(hBin, channelIDs[src_idx]-1, (*it).getProperty("Azimuth"));
                 binauraliser_setSourceElev_deg(hBin, channelIDs[src_idx]-1, (*it).getProperty("Elevation"));
-                binauraliser_setSourceDist_m(hBin, channelIDs[src_idx]-1, (*it).getProperty("Distance"));
+                binauraliserNF_setSourceDist_m(hBin, channelIDs[src_idx]-1, (*it).getProperty("Distance"));
                 src_idx++;
             }
         }
