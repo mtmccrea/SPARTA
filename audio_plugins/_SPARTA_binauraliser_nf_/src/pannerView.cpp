@@ -45,9 +45,9 @@ pannerView::pannerView (PluginProcessor* ownerFilter, int _width, int _height)
     halfHeight = height / 2.0f;
     icon_diam = height / 25.0f; // size of "farthest" distance
     icon_radius = icon_diam / 2.0f;
-    ffThresh = binauraliser_getFarfieldThresh_m(hBin);
+    ffThresh = binauraliserNF_getFarfieldThresh_m(hBin);
     // distance range of a source (closest -> farthest)
-    distRange = NormalisableRange<float>(binauraliser_getNearfieldLimit_m(hBin), hVst->upperDistRange, 0, 0.5f);
+    distRange = NormalisableRange<float>(binauraliserNF_getNearfieldLimit_m(hBin), hVst->upperDistRange, 0, 0.5f);
     // pixel radius corresponding to a 45 degree spread: height/4
     iconGrowFac = NormalisableRange<float>(1.0f, (height / 4.0f) / (icon_radius * 3.0f));
     
@@ -164,7 +164,7 @@ void pannerView::paint (juce::Graphics& g)
     if(showInputs){
         /* Draw Source icons */
         for(int src=0; src<NSources; src++){
-            float curDist = binauraliser_getSourceDist_m(hBin, src);
+            float curDist = binauraliserNF_getSourceDist_m(hBin, src);
             float srcDist_norm = 1.0f - distRange.convertTo0to1(curDist);
             float newDim1 = icon_radius * iconGrowFac.convertFrom0to1(srcDist_norm);
             float newDim2 = newDim1 * 2.0f;

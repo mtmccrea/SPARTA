@@ -91,10 +91,10 @@ inputCoordsView::inputCoordsView (PluginProcessor* ownerFilter, int _maxNCH, int
         distSliders[i].reset (new Slider ("new slider"));
         distSliders[i]->setTooltip("Distance from the center of the head (m). Filters disengage when maximally far (approx > 3 m).");
         addAndMakeVisible (distSliders[i].get());
-        distSliders[i]->setRange (binauraliser_getNearfieldLimit_m(hBin), hVst->upperDistRange, 0.001);
+        distSliders[i]->setRange (binauraliserNF_getNearfieldLimit_m(hBin), hVst->upperDistRange, 0.001);
         distSliders[i]->setNumDecimalPlacesToDisplay (2);
         distSliders[i]->setSkewFactor (0.5, false);
-        distSliders[i]->setValue(binauraliser_getSourceDist_m(hBin, i));
+        distSliders[i]->setValue(binauraliserNF_getSourceDist_m(hBin, i));
         distSliders[i]->setSliderStyle(Slider::SliderStyle::LinearBarVertical);
         distSliders[i]->setSliderSnapsToMousePosition(false);
         distSliders[i]->setColour(Slider::trackColourId, Colours::transparentBlack);
@@ -211,7 +211,7 @@ void inputCoordsView::sliderValueChanged (juce::Slider* sliderThatWasMoved)
             break;
         }
         if (sliderThatWasMoved == distSliders[i].get()) {
-            binauraliser_setSourceDist_m(hBin, i, (float)distSliders[i]->getValue());
+            binauraliserNF_setSourceDist_m(hBin, i, (float)distSliders[i]->getValue());
             break;
         }
     }
@@ -242,8 +242,8 @@ void inputCoordsView::refreshCoords(){
         elevSliders[i]->setRange (-180.0, 180.0, 0.1);
         elevSliders[i]->setValue (binauraliser_getSourceElev_deg(hBin, i), dontSendNotification);
         
-        distSliders[i]->setRange (binauraliser_getNearfieldLimit_m(hBin), hVst->upperDistRange, 0.01);
-        distSliders[i]->setValue (binauraliser_getSourceDist_m(hBin, i), dontSendNotification);
+        distSliders[i]->setRange (binauraliserNF_getNearfieldLimit_m(hBin), hVst->upperDistRange, 0.01);
+        distSliders[i]->setValue (binauraliserNF_getSourceDist_m(hBin, i), dontSendNotification);
     }
 }
 
