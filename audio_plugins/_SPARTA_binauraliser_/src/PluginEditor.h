@@ -7,7 +7,7 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 6.0.4
+  Created with Projucer version: 6.0.8
 
   ------------------------------------------------------------------------------
 
@@ -92,6 +92,9 @@ private:
     std::unique_ptr<Viewport> sourceCoordsVP;
     inputCoordsView* sourceCoordsView_handle;
     FilenameComponent fileChooser;
+
+    /* json file loading/saving */
+    std::unique_ptr<juce::FileChooser> chooser;
 
     /* sofa file loading */
     void filenameComponentChanged (FilenameComponent*) override  {

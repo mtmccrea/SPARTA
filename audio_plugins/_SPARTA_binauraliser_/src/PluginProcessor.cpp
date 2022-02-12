@@ -21,8 +21,7 @@
 */
 
 #include "PluginProcessor.h"
-#include "PluginEditor.h"
-#include "binauraliser_nf.h"
+#include "PluginEditor.h" 
 
 PluginProcessor::PluginProcessor() : 
 	AudioProcessor(BusesProperties()
@@ -38,11 +37,6 @@ PluginProcessor::PluginProcessor() :
     osc.addListener(this);
     refreshWindow = true;
     startTimer(TIMER_PROCESSING_RELATED, 80);
-    /* Far field distance threshold plus head room to firmly clear it with UI sliders. */
-    nfThresh = binauraliserNF_getNearfieldLimit_m(hBin);
-    ffThresh = binauraliserNF_getFarfieldThresh_m(hBin);
-    ffHeadroom = binauraliserNF_getFarfieldHeadroom(hBin);
-    upperDistRange = ffThresh * ffHeadroom;
 }
 
 PluginProcessor::~PluginProcessor()
@@ -95,34 +89,20 @@ void PluginProcessor::setParameter (int index, float newValue)
     else{
         index-=k_NumOfParameters;
         float newValueScaled;
-        switch (index % 3) {
-            case 0:
-                newValueScaled = (newValue - 0.5f)*360.0f;
-                // TODO: this changed value check happens twice
-                // (also in binauraliser_setSourceAzi_deg), as with the following checks... I see it's used here to prevent extraneous refreshes, but perhaps setters could return a bool on successful update?
-                // i.e. refreshWindow = binauraliser_setSourceAzi_deg(hBin, index/3, newValueScaled);
-                if (newValueScaled != binauraliser_getSourceAzi_deg(hBin, index/3)){
-                    binauraliser_setSourceAzi_deg(hBin, index/3, newValueScaled);
-                    refreshWindow = true;
-                }
-                break;
-            case 1:
-                newValueScaled = (newValue - 0.5f)*180.0f;
-                if (newValueScaled != binauraliser_getSourceElev_deg(hBin, index/3)){
-                    binauraliser_setSourceElev_deg(hBin, index/3, newValueScaled);
-                    refreshWindow = true;
-                }
-                break;
-            case 2:
-                // TODO: replace harcoded vals with pData->farfield_thresh_m, pData->nearfield_limit_m
-                newValueScaled = newValue * (ffThresh - nfThresh) + nfThresh;
-//                newValueScaled = newValue * (3.0f - 0.15) + 0.15;
-                if (newValueScaled != binauraliserNF_getSourceDist_m(hBin, index/3)){
-                    binauraliser_setSourceDist_m(hBin, index/3, newValueScaled);
-                    refreshWindow = true;
-                }
-                break;
+        if (!(index % 2)){
+            newValueScaled = (newValue - 0.5f)*360.0f;
+            if (newValueScaled != binauraliser_getSourceAzi_deg(hBin, index/2)){
+                binauraliser_setSourceAzi_deg(hBin, index/2, newValueScaled);
+                refreshWindow = true;
             }
+        }
+        else{
+            newValueScaled = (newValue - 0.5f)*180.0f;
+            if (newValueScaled != binauraliser_getSourceElev_deg(hBin, index/2)){
+                binauraliser_setSourceElev_deg(hBin, index/2, newValueScaled);
+                refreshWindow = true;
+            }
+        }
     }
 }
 
@@ -150,18 +130,16 @@ float PluginProcessor::getParameter (int index)
     /* source direction parameters */
     else{
         index-=k_NumOfParameters;
-        switch (index % 3) {
-            case 0:  return (binauraliser_getSourceAzi_deg(hBin, index/3) / 360.0f) + 0.5f;
-            case 1:  return (binauraliser_getSourceElev_deg(hBin, index/3) / 180.0f) + 0.5f;
-            case 2:  return (binauraliser_getSourceDist_m(hBin, index/3) - nfThresh) / (ffThresh - nfThresh);
-            default: return 0.0f;
-        }
+        if (!(index % 2))
+            return (binauraliser_getSourceAzi_deg(hBin, index/2)/360.0f) + 0.5f;
+        else
+            return (binauraliser_getSourceElev_deg(hBin, (index-1)/2)/180.0f) + 0.5f;
     }
 }
 
 int PluginProcessor::getNumParameters()
 {
-	return k_NumOfParameters + 3*MAX_NUM_INPUTS;
+	return k_NumOfParameters + 2*MAX_NUM_INPUTS;
 }
 
 const String PluginProcessor::getName() const
@@ -189,12 +167,10 @@ const String PluginProcessor::getParameterName (int index)
     /* source direction parameters */
     else{
         index-=k_NumOfParameters;
-        switch (index % 3) {
-           case 0:  return TRANS("Azim_") + String(index/3);
-           case 1:  return TRANS("Elev_") + String(index/3);
-           case 2:  return TRANS("Dist_") + String(index/3);
-           default: return "NULL";
-        }
+        if (!(index % 2))
+            return TRANS("Azim_") + String(index/2);
+        else
+            return TRANS("Elev_") + String((index-1)/2);
     }
 }
 
@@ -218,12 +194,10 @@ const String PluginProcessor::getParameterText(int index)
     /* source direction parameters */
     else{
         index-=k_NumOfParameters;
-        switch (index % 3) {
-            case 0:  return String(binauraliser_getSourceAzi_deg(hBin, index/3));
-            case 1:  return String(binauraliser_getSourceElev_deg(hBin, index/3));
-            case 2:  return String(binauraliser_getSourceDist_m(hBin, index/3));
-            default: return "NULL";
-        }
+        if (!(index % 2))
+            return String(binauraliser_getSourceAzi_deg(hBin, index/2));
+        else
+            return String(binauraliser_getSourceElev_deg(hBin, (index-1)/2));
     }
 }
 
@@ -351,7 +325,6 @@ void PluginProcessor::getStateInformation (MemoryBlock& destData)
     for(int i=0; i<binauraliser_getMaxNumSources(); i++){
         xml.setAttribute("SourceAziDeg" + String(i), binauraliser_getSourceAzi_deg(hBin,i));
         xml.setAttribute("SourceElevDeg" + String(i), binauraliser_getSourceElev_deg(hBin,i));
-        xml.setAttribute("SourceDistMeter" + String(i), binauraliser_getSourceDist_m(hBin,i));
     }
     xml.setAttribute("nSources", binauraliser_getNumSources(hBin));
     
@@ -370,6 +343,7 @@ void PluginProcessor::getStateInformation (MemoryBlock& destData)
     xml.setAttribute("FLIP_ROLL", binauraliser_getFlipRoll(hBin));
     xml.setAttribute("RPY_FLAG", binauraliser_getRPYflag(hBin));
     xml.setAttribute("HRIRdiffEQ", binauraliser_getEnableHRIRsDiffuseEQ(hBin));
+    
     xml.setAttribute("OSC_PORT", osc_port_ID);
     
     copyXmlToBinary(xml, destData);
@@ -378,7 +352,7 @@ void PluginProcessor::getStateInformation (MemoryBlock& destData)
 void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
-    
+
     if (xmlState != nullptr) {
         if (xmlState->hasTagName("BINAURALISERPLUGINSETTINGS")) {
             for(int i=0; i<binauraliser_getMaxNumSources(); i++){
@@ -386,8 +360,6 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
                     binauraliser_setSourceAzi_deg(hBin, i, (float)xmlState->getDoubleAttribute("SourceAziDeg" + String(i), 0.0f));
                 if(xmlState->hasAttribute("SourceElevDeg" + String(i)))
                     binauraliser_setSourceElev_deg(hBin, i, (float)xmlState->getDoubleAttribute("SourceElevDeg" + String(i), 0.0f));
-                if(xmlState->hasAttribute("SourceDistMeter" + String(i)))
-                    binauraliserNF_setSourceDist_m(hBin, i, (float)xmlState->getDoubleAttribute("SourceDistMeter" + String(i), upperDistRange)); // default source distance is far field (no near field filtering)
             }
             if(xmlState->hasAttribute("nSources"))
                binauraliser_setNumSources(hBin, xmlState->getIntAttribute("nSources", 1)); 
@@ -447,17 +419,16 @@ void PluginProcessor::saveConfigurationToFile (File destination)
     {
         sources.appendChild (ConfigurationHelper::
                              createElement(binauraliser_getSourceAzi_deg(hBin, i),
-                                           binauraliser_getSourceElev_deg(hBin, i),
-                                           binauraliserNF_getSourceDist_m(hBin, i),
-                                           i+1, false, 1.0f), nullptr);
+                                          binauraliser_getSourceElev_deg(hBin, i),
+                                          1.0f, i+1, false, 1.0f), nullptr);
     }
     DynamicObject* jsonObj = new DynamicObject();
-    jsonObj->setProperty("Name", var("SPARTA Binauraliser source directions and distances."));
+    jsonObj->setProperty("Name", var("SPARTA Binauraliser source directions."));
     char versionString[10];
     strcpy(versionString, "v");
     strcat(versionString, JucePlugin_VersionString);
     jsonObj->setProperty("Description", var("This configuration file was created with the SPARTA Binauraliser " + String(versionString) + " plug-in. " + Time::getCurrentTime().toString(true, true)));
-    jsonObj->setProperty ("GenericLayout", ConfigurationHelper::convertElementsToVar (sources, "Source Directions and Distances"));
+    jsonObj->setProperty ("GenericLayout", ConfigurationHelper::convertElementsToVar (sources, "Source Directions"));
     //jsonObj->setProperty ("LoudspeakerLayout", ConfigurationHelper::convertLoudspeakersToVar (sources, "Source Directions"));
     Result result = ConfigurationHelper::writeConfigurationToFile (destination, var (jsonObj));
 }
@@ -503,7 +474,6 @@ void PluginProcessor::loadConfiguration (const File& configFile)
             if ( !((*it).getProperty("Imaginary"))){
                 binauraliser_setSourceAzi_deg(hBin, channelIDs[src_idx]-1, (*it).getProperty("Azimuth"));
                 binauraliser_setSourceElev_deg(hBin, channelIDs[src_idx]-1, (*it).getProperty("Elevation"));
-                binauraliserNF_setSourceDist_m(hBin, channelIDs[src_idx]-1, (*it).getProperty("Distance"));
                 src_idx++;
             }
         }

@@ -73,7 +73,6 @@ private:
     void refreshCoords();
     std::unique_ptr<Slider>* aziSliders;
     std::unique_ptr<Slider>* elevSliders;
-    std::unique_ptr<Slider>* distSliders;
     int maxNCH, currentNCH;
     bool sliderHasChanged;
 

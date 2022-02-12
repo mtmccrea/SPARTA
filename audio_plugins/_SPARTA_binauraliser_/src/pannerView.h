@@ -59,7 +59,6 @@ public:
     void mouseDown (const juce::MouseEvent& e) override;
     void mouseDrag (const juce::MouseEvent& e) override;
     void mouseUp (const juce::MouseEvent& e) override;
-//    void mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel) override;
 
 
 
@@ -69,8 +68,6 @@ private:
     void* hBin;
     int width;
     int height;
-    float halfWidth;
-    float halfHeight;
     bool showInputs;
     bool showOutputs;
     Rectangle<float> SourceIcons[MAX_NUM_INPUTS];
@@ -79,12 +76,7 @@ private:
     int NLoudspeakers;
     bool sourceIconIsClicked;
     int indexOfClickedSource;
-    float icon_diam;
-    float icon_radius;
-    NormalisableRange<float> distRange;
-    NormalisableRange<float> iconGrowFac;
-    float ffThresh;
-    float upperDistCutoff;
+    bool soloActive;
     //[/UserVariables]
 
     //==============================================================================

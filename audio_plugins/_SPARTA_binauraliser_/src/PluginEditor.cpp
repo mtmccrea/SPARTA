@@ -7,7 +7,7 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 6.0.4
+  Created with Projucer version: 6.0.8
 
   ------------------------------------------------------------------------------
 
@@ -134,7 +134,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     CBinterpMode->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
     CBinterpMode->addListener (this);
 
-    CBinterpMode->setBounds (328, 324, 112, 20);
+    CBinterpMode->setBounds (316, 324, 125, 20);
 
     tb_loadJSON.reset (new juce::TextButton ("new button"));
     addAndMakeVisible (tb_loadJSON.get());
@@ -280,6 +280,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     /* interp modes */
     CBinterpMode->addItem(TRANS("Triangular"), INTERP_TRI);
+    CBinterpMode->addItem(TRANS("Triangular (PS)"), INTERP_TRI_PS);
 
     /* add source preset options */
     CBsourceDirsPreset->addItem (TRANS("Mono"), SOURCE_CONFIG_PRESET_MONO);
@@ -366,7 +367,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     CBsourceDirsPreset->setTooltip("Presets for source directions to use for spatialisation.");
     TBuseDefaultHRIRs->setTooltip("If this is 'ticked', the plug-in is using the default HRIR set from the Spatial_Audio_Framework.");
     fileChooser.setTooltip("Optionally, a custom HRIR set may be loaded via the SOFA standard. Note that if the plug-in fails to load the specified .sofa file, it will revert to the default HRIR data.");
-    CBinterpMode->setTooltip("Interpolation approach. Currently only triangular (via amplitude-normalised VBAP gains). Note that this plug-in also performs phase-simplification of the HRIRs, which involves estimating the ITDs for all the HRIRs, removing the phase from the HRTFs, but then re-introducing the phase as IPDs per frequency-bin. This greatly simplifies the HRIR interpolation process, but note that it will not be the same as direct convolution; although it should be perceptually very close in the majority of cases. However, this also means that BRIRs are not supported.");
+    CBinterpMode->setTooltip("Interpolation approach. Note that this plug-in can also perform \"phase-simplification\" (PS) of the HRTFs, which involves estimating the ITDs for all the HRIRs, removing the phase from the HRTFs, but then re-introducing the phase as IPDs per frequency-bin. Note that binaural room impulse responses (BRIRs) are not supported by either of the two modes!");
     TBenableRotation->setTooltip("Enables/Disables rotation of the source directions.");
     s_yaw->setTooltip("Sets the 'Yaw' rotation angle (in degrees).");
     s_pitch->setTooltip("Sets the 'Pitch' rotation angle (in degrees).");
@@ -392,7 +393,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     pluginDescription->setBounds (0, 0, 200, 32);
     pluginDescription->setAlpha(0.0f);
     pluginDescription->setEnabled(false);
-    pluginDescription->setTooltip(TRANS("A simple HRIR interpolator and convolver with optional near field distance filtering to simulate sources at close range. Currently, the only interpolation option is \"Triangular\", which also relies on phase-simplification of the HRIRs. This simplification involves estimating the ITDs for all the HRIRs, removing the phase from the HRTFs, but then re-introducing the phase as IPDs per frequency-bin. This greatly simplifies the HRIR interpolation process and reduces the computational complexity considerably, but it should be known to the user that this is not the same as direct convolution; although, it should be perceptually very close to direct convolution in the majority of cases. However, this also means that binaural room impuslse responses (BRIRs) are not supported by the plug-in!\n"));
+    pluginDescription->setTooltip(TRANS("A simple HRIR interpolator and convolver. Note that binaural room impulse responses (BRIRs) are not supported!\n"));
 
 	/* Specify screen refresh rate */
     startTimer(TIMER_GUI_RELATED, 40);
@@ -696,7 +697,7 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 227, y = 319, width = 132, height = 30;
+        int x = 222, y = 319, width = 132, height = 30;
         juce::String text (TRANS("Interp. Mode:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
@@ -889,31 +890,32 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 16, y = 1, width = 76, height = 32;
-        juce::String text (TRANS("SPARTA |"));
+        int x = 16, y = 1, width = 100, height = 32;
+        juce::String text (TRANS("SPARTA|"));
+        juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
-        juce::Font font (18.00f, juce::Font::plain);
-        g.setFont (font.withTypefaceStyle ("Bold"));
-        g.setColour (juce::Colours::white);
+        g.setColour (fillColour);
+        g.setFont (juce::Font (18.80f, juce::Font::plain).withTypefaceStyle ("Bold"));
         g.drawText (text, x, y, width, height,
-                    juce::Justification::right, true);
-        x += 16+60; width = 100;
-        text = (TRANS(" Binauraliser"));
-        g.setColour (juce::Colour (0xffff73f9));
-        g.drawText (text, x, y, width, height,
-                    juce::Justification::right, true);
-        x += (width+2);
-        text = (TRANS("NF"));
-        g.setFont (font.withTypefaceStyle ("Bold Italic"));
-        g.setColour (juce::Colour::fromFloatRGBA(255.f/255.f, 183.f/255.f, 3.f/255.f, 1.f));
-        g.drawText (text, x, y, width, height,
-                    juce::Justification::left, true);
+                    juce::Justification::centredLeft, true);
     }
 
     {
-        int x = 28, y = 122, width = 176, height = 28;
-        juce::String text (juce::CharPointer_UTF8 (" #   Azi\xc2\xb0     Elev\xc2\xb0   Dist (m)"));
+        int x = 92, y = 1, width = 112, height = 32;
+        juce::String text (TRANS("Binauraliser"));
+        juce::Colour fillColour = juce::Colour (0xffff73f9);
+        //[UserPaintCustomArguments] Customize the painting arguments here..
+        //[/UserPaintCustomArguments]
+        g.setColour (fillColour);
+        g.setFont (juce::Font (18.00f, juce::Font::plain).withTypefaceStyle ("Bold"));
+        g.drawText (text, x, y, width, height,
+                    juce::Justification::centredLeft, true);
+    }
+
+    {
+        int x = 66, y = 122, width = 108, height = 28;
+        juce::String text (juce::CharPointer_UTF8 ("Azi\xc2\xb0   #   Elev\xc2\xb0"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -965,7 +967,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 720, y = 106, width = 160, height = 30;
-        juce::String text (TRANS("Apply Pre-Processing:"));
+        juce::String text (TRANS("Apply Diffuse-Field EQ:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -980,7 +982,7 @@ void PluginEditor::paint (juce::Graphics& g)
 	g.setColour(Colours::white);
 	g.setFont(Font(11.00f, Font::plain));
 	g.drawText(TRANS("Ver ") + JucePlugin_VersionString + BUILD_VER_SUFFIX + TRANS(", Build Date ") + __DATE__ + TRANS(" "),
-		235, 16, 530, 11,
+		200, 16, 530, 11,
 		Justification::centredLeft, true);
 
     /* display warning message */
@@ -1123,27 +1125,34 @@ void PluginEditor::buttonClicked (juce::Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == tb_loadJSON.get())
     {
         //[UserButtonCode_tb_loadJSON] -- add your button handler code here..
-        FileChooser myChooser ("Load configuration...",
-                               hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
-                               "*.json");
-        if (myChooser.browseForFileToOpen()) {
-            File configFile (myChooser.getResult());
-            hVst->setLastDir(configFile.getParentDirectory());
-            hVst->loadConfiguration (configFile);
-        }
+        chooser = std::make_unique<juce::FileChooser> ("Load configuration...",
+                                                       hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
+                                                       "*.json");
+        auto chooserFlags = juce::FileBrowserComponent::openMode
+                                  | juce::FileBrowserComponent::canSelectFiles;
+        chooser->launchAsync (chooserFlags, [this] (const FileChooser& fc) {
+            auto file = fc.getResult();
+            if (file != File{}){
+                hVst->setLastDir(file.getParentDirectory());
+                hVst->loadConfiguration (file);
+            }
+        });
         //[/UserButtonCode_tb_loadJSON]
     }
     else if (buttonThatWasClicked == tb_saveJSON.get())
     {
         //[UserButtonCode_tb_saveJSON] -- add your button handler code here..
-        FileChooser myChooser ("Save configuration...",
-                               hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
-                               "*.json");
-        if (myChooser.browseForFileToSave (true)) {
-            File configFile (myChooser.getResult());
-            hVst->setLastDir(configFile.getParentDirectory());
-            hVst->saveConfigurationToFile (configFile);
-        }
+        chooser = std::make_unique<juce::FileChooser> ("Save configuration...",
+                                                       hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
+                                                       "*.json");
+        auto chooserFlags = juce::FileBrowserComponent::saveMode;
+        chooser->launchAsync (chooserFlags, [this] (const FileChooser& fc) {
+            auto file = fc.getResult();
+            if (file != File{}) {
+                hVst->setLastDir(file.getParentDirectory());
+                hVst->saveConfigurationToFile (file);
+            }
+        });
         //[/UserButtonCode_tb_saveJSON]
     }
     else if (buttonThatWasClicked == t_flipYaw.get())
@@ -1372,7 +1381,7 @@ BEGIN_JUCER_METADATA
           italic="0" justification="33" typefaceStyle="Bold"/>
     <RECT pos="214 312 233 41" fill="solid: 10f4f4f4" hasStroke="1" stroke="0.8, mitered, butt"
           strokeColour="solid: 67a0a0a0"/>
-    <TEXT pos="227 319 132 30" fill="solid: ffffffff" hasStroke="0" text="Interp. Mode:"
+    <TEXT pos="222 319 132 30" fill="solid: ffffffff" hasStroke="0" text="Interp. Mode:"
           fontname="Default font" fontsize="15.0" kerning="0.0" bold="1"
           italic="0" justification="33" typefaceStyle="Bold"/>
     <TEXT pos="719 158 89 30" fill="solid: ffffffff" hasStroke="0" text="HRIR/DAW Fs:"
@@ -1436,7 +1445,7 @@ BEGIN_JUCER_METADATA
           strokeColour="solid: ffb9b9b9"/>
     <RECT pos="0 360 920 2" fill="solid: 61a52a" hasStroke="1" stroke="2, mitered, butt"
           strokeColour="solid: ffb9b9b9"/>
-    <TEXT pos="720 106 160 30" fill="solid: ffffffff" hasStroke="0" text="Apply Pre-Processing:"
+    <TEXT pos="720 106 160 30" fill="solid: ffffffff" hasStroke="0" text="Apply Diffuse-Field EQ:"
           fontname="Default font" fontsize="15.0" kerning="0.0" bold="1"
           italic="0" justification="33" typefaceStyle="Bold"/>
   </BACKGROUND>
@@ -1478,7 +1487,7 @@ BEGIN_JUCER_METADATA
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="33"/>
   <COMBOBOX name="new combo box" id="aeb0b2f644784061" memberName="CBinterpMode"
-            virtualName="" explicitFocusOrder="0" pos="328 324 112 20" editable="0"
+            virtualName="" explicitFocusOrder="0" pos="316 324 125 20" editable="0"
             layout="33" items="" textWhenNonSelected="" textWhenNoItems="(no choices)"/>
   <TEXTBUTTON name="new button" id="527e24c6748d02d4" memberName="tb_loadJSON"
               virtualName="" explicitFocusOrder="0" pos="140 40 34 14" bgColOff="ff14889e"
@@ -1537,3 +1546,4 @@ END_JUCER_METADATA
 
 //[EndFile] You can add extra defines here...
 //[/EndFile]
+
