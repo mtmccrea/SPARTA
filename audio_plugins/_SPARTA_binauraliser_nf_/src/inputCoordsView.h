@@ -23,7 +23,6 @@
 
 #include "JuceHeader.h"
 #include "PluginProcessor.h"
-#include "binauraliser_nf.h" // TODO: why needed here?
 
 //[/Headers]
 
