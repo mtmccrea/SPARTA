@@ -898,13 +898,13 @@ void PluginEditor::paint (juce::Graphics& g)
         g.setColour (juce::Colours::white);
         g.drawText (text, x, y, width, height,
                     juce::Justification::right, true);
-        x += 16+60; width = 100;
+        x += 16+60; width = 120;
         text = (TRANS(" Binauraliser"));
         g.setColour (juce::Colour (0xffff73f9));
         g.drawText (text, x, y, width, height,
                     juce::Justification::right, true);
         x += (width+2);
-        text = (TRANS("NF"));
+        text = (TRANS("NearField"));
         g.setFont (font.withTypefaceStyle ("Bold Italic"));
         g.setColour (juce::Colour::fromFloatRGBA(255.f/255.f, 183.f/255.f, 3.f/255.f, 1.f));
         g.drawText (text, x, y, width, height,
