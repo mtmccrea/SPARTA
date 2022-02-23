@@ -2,7 +2,7 @@
  ==============================================================================
  
  This file is part of SPARTA; a suite of spatial audio plug-ins.
- Copyright (c) 2018 - Leo McCormack.
+ Copyright (c) 2018 - Michael McCrea, Leo McCormack.
  
  SPARTA is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

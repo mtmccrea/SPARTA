@@ -2,7 +2,7 @@
  ==============================================================================
  
  This file is part of SPARTA; a suite of spatial audio plug-ins.
- Copyright (c) 2018 - Leo McCormack.
+ Copyright (c) 2018 - Michael McCrea, Leo McCormack.
  
  SPARTA is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -97,9 +97,10 @@ void PluginProcessor::setParameter (int index, float newValue)
         switch (index % 3) {
             case 0:
                 newValueScaled = (newValue - 0.5f)*360.0f;
-                // TODO: this changed value check happens twice
-                // (also in binauraliser_setSourceAzi_deg), as with the following checks... I see it's used here to prevent extraneous refreshes, but perhaps setters could return a bool on successful update?
-                // i.e. refreshWindow = binauraliser_setSourceAzi_deg(hBin, index/3, newValueScaled);
+                /* TODO: this changed value check happens twice
+                 * (also in binauraliser_setSourceAzi_deg), as with the following checks... I see it's used here to prevent extraneous refreshes, but perhaps setters could return a bool on successful update
+                 * i.e. refreshWindow = binauraliser_setSourceAzi_deg(hBin, index/3, newValueScaled);
+                 */
                 if (newValueScaled != binauraliser_getSourceAzi_deg(hBin, index/3)){
                     binauraliser_setSourceAzi_deg(hBin, index/3, newValueScaled);
                     refreshWindow = true;
@@ -115,7 +116,6 @@ void PluginProcessor::setParameter (int index, float newValue)
             case 2:
                 // TODO: replace harcoded vals with pData->farfield_thresh_m, pData->nearfield_limit_m
                 newValueScaled = newValue * (ffThresh - nfThresh) + nfThresh;
-//                newValueScaled = newValue * (3.0f - 0.15) + 0.15;
                 if (newValueScaled != binauraliserNF_getSourceDist_m(hBin, index/3)){
                     binauraliserNF_setSourceDist_m(hBin, index/3, newValueScaled);
                     refreshWindow = true;
