@@ -123,7 +123,7 @@ private:
                 /* reinitialise codec if needed */
                 if(binauraliser_getCodecStatus(hBin) == CODEC_STATUS_NOT_INITIALISED){
                     try{
-                        std::thread threadInit(binauraliser_initCodec, hBin);
+                        std::thread threadInit(binauraliserNF_initCodec, hBin);
                         threadInit.detach();
                     } catch (const std::exception& exception) {
                         std::cout << "Could not create thread" << exception.what() << std::endl;
