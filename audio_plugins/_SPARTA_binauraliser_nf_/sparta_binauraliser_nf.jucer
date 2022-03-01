@@ -346,9 +346,8 @@
     </VS2015>
     <XCODE_MAC targetFolder="make/MacOSX/Xcode/" vstFolder="../../../SDKs/VST3 SDK"
                vst3Folder="../../../../SDKs/VST3_SDK/" extraLinkerFlags="-L/usr/local/lib -lsaf_mkl_custom_lp64 -lsaf_ipp_custom &#10;-Wl,-rpath,/usr/local/lib"
-               extraCompilerFlags="-pedantic&#10;-W&#10;-Wall&#10;-Wextra&#10;-fms-extensions&#10;-Wno-microsoft"
-               extraDefs="SAF_USE_INTEL_MKL_LP64&#10;SAF_USE_INTEL_IPP&#10;SAF_ENABLE_SOFA_READER_MODULE"
-               xcodeValidArchs="i386,x86_64" userNotes="For Xcode projects, the Extra Compiler Flags above will be populated in C++ Compiler Flags, but not the C Compiler Flags in the Build Settings. So they'll need to be manually added to Build Settings &gt; Apple Clang - Custom Compiler Flags &gt; Other C Flags:&#10;-pedantic&#10;-W&#10;-Wall&#10;-Wextra&#10;-fms-extensions&#10;-Wno-microsoft">
+               extraCompilerFlags="-pedantic&#10;-W&#10;-Wall&#10;-Wextra" extraDefs="SAF_USE_INTEL_MKL_LP64&#10;SAF_USE_INTEL_IPP&#10;SAF_ENABLE_SOFA_READER_MODULE"
+               xcodeValidArchs="i386,x86_64">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="sparta_binauraliser_nf_debug"
                        binaryPath="" headerPath="../../../../../SDKs/Spatial_Audio_Framework/framework/include&#10;../../../../../SDKs/Spatial_Audio_Framework/examples/include&#10;../../../../../SDKs/VST2_SDK&#10;/opt/intel/oneapi/mkl/latest/include&#10;/opt/intel/oneapi/ipp/latest/include"
